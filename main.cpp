@@ -2,7 +2,7 @@
 #include <chrono>
 #include "Quadtree.h"
 #include "ChannelGraph.h"
-// include instead of declaring manually
+
 
 using namespace std;
 
@@ -85,24 +85,24 @@ vector<Partition> partitions = {
 };
 
     while (true) {
-        cout << "\nCommand: makechannelgraph | subdivide w h minW minH scale | insertPoint x y | searchPoint x y | deletePoint x y | pathtoroot x y | rectQuery x1 y1 x2 y2 | netIntersect x1 y1 x2 y2 | exit\n> ";
+        cout << "\nCommand: MakeChannelGraph |Subdivide w h minW minH scale | InsertPoint x y | SearchPoint x y | DeletePoint x y | PathToRoot x y | RectQuery x1 y1 x2 y2 | NetIntersect x1 y1 x2 y2 | Exit\n> ";
         string cmd;
         cin >> cmd;
 
-        if (cmd == "exit") break;
-        else if (cmd == "makechannelgraph") {
+        if (cmd == "Exit") break;
+        else if (cmd == "MakeChannelGraph") {
             makeChannelGraph(graph, partitions);
             cout << "Channel graph created.\n";
         }
-        else if (cmd == "subdivide") {
+        else if (cmd == "Subdivide") {
             int w, h, minW, minH, scale;
             cin >> w >> h >> minW >> minH >> scale;
             if (!graph.m_vertices.empty()) {
                 Vertex root(0, 0, w, h, 0);
-                tree = new QuadtreeNode(root);
-                QuadtreeNode::getLeafNodes().clear();
-                auto start = chrono::high_resolution_clock::now();
-                QuadtreeNode::subdivide(tree, minW, minH, scale, graph);
+              tree = new QuadtreeNode(root);
+              QuadtreeNode::getLeafNodes().clear();
+          auto start = chrono::high_resolution_clock::now();
+              tree->Subdivide(minW, minH, scale, graph);//tree object should not be passed in function
                 auto end = chrono::high_resolution_clock::now();
                 chrono::duration<double> elapsed = end - start;
                 cout << "Quadtree created in " << elapsed.count() << " seconds.\n";
@@ -110,32 +110,32 @@ vector<Partition> partitions = {
                 cout << "Please run makechannelgraph first.\n";
             }
         }
-        else if (cmd == "insertPoint") {
+        else if (cmd == "InsertPoint") {
             int x, y; cin >> x >> y;
-            if (tree) QuadtreeNode::insertPoint(tree, x, y);
+            tree->InsertPoint(x,y);
         }
-        else if (cmd == "searchPoint") {
+        else if (cmd == "SearchPoint") {
             int x, y; cin >> x >> y;
-            if (tree) QuadtreeNode::searchPoint(tree, x, y);
+          tree->SearchPoint(x,y);
             
         }
-        else if (cmd == "deletePoint") {
+        else if (cmd == "DeletePoint") {
             int x, y; cin >> x >> y;
-            if (tree) QuadtreeNode::deletePoint(tree, x, y);
+            if (tree) QuadtreeNode::DeletePoint(tree, x, y);
         }
-        else if (cmd == "pathtoroot") {
+        else if (cmd == "PathToRoot") {
             int x, y; cin >> x >> y;
-            if (tree) QuadtreeNode::pathtoroot(tree, x, y);
+           tree->PathToRoot( x, y);
         }
-        else if (cmd == "rectQuery") {
+        else if (cmd == "RectQuery") {
             int x1, y1, x2, y2; cin >> x1 >> y1 >> x2 >> y2;
-            auto res = QuadtreeNode::rectQuery(tree, x1, y1, x2, y2, graph);
+            auto res = QuadtreeNode::RectQuery(tree, x1, y1, x2, y2, graph);
             for (const auto& r : res) cout << r << " ";
             cout << "\n";
         }
-        else if (cmd == "netIntersect") {
+        else if (cmd == "NetIntersect") {
             int x1, y1, x2, y2; cin >> x1 >> y1 >> x2 >> y2;
-            auto res = QuadtreeNode::netIntersect(tree, x1, y1, x2, y2, graph);
+            auto res = QuadtreeNode::NetIntersect(tree, x1, y1, x2, y2, graph);
             for (const auto& r : res) cout << r << " ";
             cout << "\n";
         }

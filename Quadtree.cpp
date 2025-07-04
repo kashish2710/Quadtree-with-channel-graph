@@ -1,69 +1,77 @@
 #include "Quadtree.h"
-
+//initialization
 int QuadtreeNode::currentID = 1;
 vector<QuadtreeNode*> QuadtreeNode::leafNodes;
 
+//constructor
 QuadtreeNode::QuadtreeNode(Vertex r) : region(r), parent(nullptr), id(currentID++) {}
-
+//destructor
 QuadtreeNode::~QuadtreeNode() {
     for (auto* ch : children) delete ch;
 }
-
+//in boundary function
 bool QuadtreeNode::inBoundary(QuadtreeNode* n, int px, int py) {
     return (px >= n->region.x && px < n->region.x + n->region.width &&
             py >= n->region.y && py < n->region.y + n->region.height);
 }
-
-void QuadtreeNode::subdivide(QuadtreeNode* node, int minW, int minH, int k, const ChannelGraph& graph) {
-    int w = node->region.width, h = node->region.height;
+//subdivide-API
+void QuadtreeNode::Subdivide(int minW, int minH, int scale, const ChannelGraph& graph) {
+    int w = region.width, h = region.height;
     if (w <= minW && h <= minH) {
         for (auto vp : boost::make_iterator_range(vertices(graph))) {
             const Partition& p = graph[vp];
-            bool overlaps = !(p.x2 <= node->region.x || p.x1 >= node->region.x + w ||
-                              p.y2 <= node->region.y || p.y1 >= node->region.y + h);
+            bool overlaps = !(p.x2 <= region.x || p.x1 >= region.x + w ||
+                              p.y2 <= region.y || p.y1 >= region.y + h);
             if (overlaps) {
-                node->graphPartitionIDs.push_back(vp);
+                graphPartitionIDs.push_back(vp);
             }
         }
-        leafNodes.push_back(node);
+        leafNodes.push_back(this);
         return;
     }
 
-    int subW = (w + k - 1) / k, subH = (h + k - 1) / k;
-    int x0 = node->region.x, y0 = node->region.y, lvl = node->region.level + 1;
+    int subW = (w + scale - 1) / scale;
+    int subH = (h + scale - 1) / scale;
+    int x0 = region.x, y0 = region.y, lvl = region.level + 1;
 
-    for (int i = 0; i < k; ++i) {
-        for (int j = 0; j < k; ++j) {
+    for (int i = 0; i < scale; ++i) {
+        for (int j = 0; j < scale; ++j) {
             int nx = x0 + i * subW, ny = y0 + j * subH;
-            int aw = min(subW, x0 + w - nx), ah = min(subH, y0 + h - ny);
+            int aw = std::min(subW, x0 + w - nx);
+            int ah = std::min(subH, y0 + h - ny);
             if (aw > 0 && ah > 0) {
                 auto* child = new QuadtreeNode(Vertex(nx, ny, aw, ah, lvl));
-                child->parent = node;
-                node->children.push_back(child);
+                child->parent = this;
+                children.push_back(child);
             }
         }
     }
 
-    for (auto* ch : node->children)
-        subdivide(ch, minW, minH, k, graph);
+    for (auto* ch : children) {
+        ch->Subdivide(minW, minH, scale, graph);  // recursive call on child
+    }
 }
-
-void QuadtreeNode::insertPoint(QuadtreeNode* root, int px, int py) {
-    if (!inBoundary(root, px, py)) {
+//insertPoint-API
+void QuadtreeNode::InsertPoint(int px, int py) {
+    if (!inBoundary(this, px, py)) {
         cout << "Point (" << px << "," << py << ") is outside the root boundary. Cannot insert.\n";
         return;
     }
 
-    if (root->children.empty()) {
-        root->points.emplace_back(px, py);
-        cout << "Inserted at node " << root->id << "\n";
+    if (children.empty()) {
+        if (inBoundary(this, px, py)) {
+            points.emplace_back(px, py);
+            cout << "Inserted at node " << id << "\n";
+        } else {
+            cout << "Point (" << px << "," << py << ") is outside all current leaf nodes. Cannot insert.\n";
+        }
         return;
     }
 
     bool inserted = false;
-    for (auto* ch : root->children) {
-        if (inBoundary(ch, px, py)) {
-            insertPoint(ch, px, py);
+    for (auto* ch : children) {
+        if (ch && inBoundary(ch, px, py)) {
+            ch->InsertPoint(px, py);
             inserted = true;
             break;
         }
@@ -75,31 +83,35 @@ void QuadtreeNode::insertPoint(QuadtreeNode* root, int px, int py) {
 }
 
 
-void QuadtreeNode::searchPoint(QuadtreeNode* root, int px, int py) {
-    if (!inBoundary(root, px, py)) {
-        cout << "Point (" << px << "," << py << ") is outside the root boundary.\n";
+
+
+//searchPoint-API
+void QuadtreeNode::SearchPoint( int px, int py) {
+    if (!inBoundary(this, px, py)) {
+        cout << "Point (" << px << "," << py << ") is outside the this boundary.\n";
         return;
     }
 
-    if (root->children.empty()) {
-        cout << "Node ID " << root->id << " region (" << root->region.x << "," << root->region.y
-             << ") " << root->region.width << "x" << root->region.height << "\nPartitions: ";
-        for (int pid : root->graphPartitionIDs)
+    if (this->children.empty()) {
+        cout << "Node ID " << this->id << " region (" << this->region.x << "," << this->region.y
+             << ") " << this->region.width << "x" << this->region.height << "\nPartitions: ";
+        for (int pid : this->graphPartitionIDs)
             cout << pid << " ";
         cout << "\nPath: ";
-        printPathFromLeafToRoot(root);
+        printPathFromLeafToRoot(this);
         cout << "\n";
         return;
     }
 
     bool found = false;
-    for (auto* ch : root->children) {
-        if (inBoundary(ch, px, py)) {
-            searchPoint(ch, px, py);  // just recurse once in correct child
-            found = true;
-            break;
-        }
+   for (auto* ch : this->children) {
+    if (ch && inBoundary(ch, px, py)) { 
+        ch->SearchPoint( px, py);
+        found = true;
+        break;
     }
+}
+
 
     if (!found) {
         cout << "Point (" << px << "," << py << ") is outside all current leaf nodes.\n";
@@ -116,8 +128,13 @@ void QuadtreeNode::printPathFromLeafToRoot(QuadtreeNode* n) {
     for (int id : path) cout << id << " ";
 }
 
-void QuadtreeNode::deletePoint(QuadtreeNode*& root, int px, int py) {
-    if (!inBoundary(root, px, py)) return;
+//deletepoint-API
+void QuadtreeNode::DeletePoint(QuadtreeNode*& root, int px, int py) {
+    
+    if (!inBoundary(root, px, py)) {
+    cout<<"points does not lie inside tree";
+    return;
+    }
 
     if (root->children.empty()) {
         auto it = find(leafNodes.begin(), leafNodes.end(), root);
@@ -137,7 +154,7 @@ void QuadtreeNode::deletePoint(QuadtreeNode*& root, int px, int py) {
     bool found = false;
     for (auto*& ch : root->children) {
         if (ch && inBoundary(ch, px, py)) {
-            deletePoint(ch, px, py);
+            DeletePoint(ch, px, py);
             found = true;
             return;
         }
@@ -148,16 +165,18 @@ void QuadtreeNode::deletePoint(QuadtreeNode*& root, int px, int py) {
     }
 }
 
-
-void QuadtreeNode::pathtoroot(QuadtreeNode* root, int px, int py) {
-    searchPoint(root, px, py);
+//pathtoroot-API
+void QuadtreeNode::PathToRoot( int px, int py) {
+    SearchPoint( px, py);
 }
 
 vector<QuadtreeNode*>& QuadtreeNode::getLeafNodes() {
     return leafNodes;
 }
 
-vector<string> QuadtreeNode::rectQuery(QuadtreeNode* root, int x1, int y1, int x2, int y2, const ChannelGraph& graph) {
+
+//rectQuery-API
+vector<string> QuadtreeNode::RectQuery(QuadtreeNode* root, int x1, int y1, int x2, int y2, const ChannelGraph& graph) {
     unordered_set<string> unique;
     if (!root) return {};
 
@@ -177,15 +196,15 @@ vector<string> QuadtreeNode::rectQuery(QuadtreeNode* root, int x1, int y1, int x
         }
     } else {
         for (auto* ch : root->children) {
-            auto sub = rectQuery(ch, x1, y1, x2, y2, graph);
+            auto sub = RectQuery(ch, x1, y1, x2, y2, graph);
             unique.insert(sub.begin(), sub.end());
         }
     }
 
     return vector<string>(unique.begin(), unique.end());
 }
-
-vector<string> QuadtreeNode::netIntersect(QuadtreeNode* root, int x1, int y1, int x2, int y2, const ChannelGraph& graph) {
+                //netIntersect-API
+vector<string> QuadtreeNode::NetIntersect(QuadtreeNode* root, int x1, int y1, int x2, int y2, const ChannelGraph& graph) {
     auto inside = [](int x, int y, const Partition& p) {
         return x >= p.x1 && x <= p.x2 && y >= p.y1 && y <= p.y2;
     };
