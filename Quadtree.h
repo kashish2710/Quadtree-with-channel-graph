@@ -31,17 +31,17 @@ public:
     QuadtreeNode(Vertex r);
     ~QuadtreeNode();
 
-  void Subdivide(int minW, int minH, int scale, const ChannelGraph& graph);
-   void InsertPoint( int px, int py);
-   void SearchPoint( int px, int py);
-    static void DeletePoint(QuadtreeNode*& root, int px, int py);
-    void PathToRoot( int px, int py);
-    static vector<string> RectQuery(QuadtreeNode* root, int x1, int y1, int x2, int y2, const ChannelGraph& graph);
-    static vector<string> NetIntersect(QuadtreeNode* root, int x1, int y1, int x2, int y2, const ChannelGraph& graph);
+void Subdivide(int minW, int minH, int scale, const ChannelGraph& graph);
+void InsertPoint( int x, int y);
+void SearchPoint( int x, int y,vector<int>& path, const ChannelGraph& graph);
+void QuadtreeNode::DeletePoint(int x, int y);
+void PathToRoot( int x, int y,vector<int>& path, const ChannelGraph& graph);
+vector<string> RectQuery( int x1, int y1, int x2, int y2, const ChannelGraph& graph);
+vector<string> NetIntersect( int x1, int y1, int x2, int y2, const ChannelGraph& graph);
 
-    static vector<QuadtreeNode*>& getLeafNodes();
-    static void printPathFromLeafToRoot(QuadtreeNode* node);
-    static bool inBoundary(QuadtreeNode* node, int px, int py);
+    static vector<QuadtreeNode*>& GetLeafNodes();
+
+    static bool InBoundary(QuadtreeNode* node, int x, int y);
 
    
 };
