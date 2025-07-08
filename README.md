@@ -49,5 +49,5 @@ BETTER UNDERSTANDING:
 
 Author
 **Kashish**
-B.Tech Student, Netaji Subhas University of Technology (NSUT)
+B.Tech Student || Netaji Subhas University of Technology (NSUT)
 
