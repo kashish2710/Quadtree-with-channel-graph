@@ -28,21 +28,21 @@ Each Quadtree leaf node stores the names of partitions overlapping its region.
 All commands are executed via terminal through main.cpp:
 
 Command	Description
-subdivide x1 y1 x2 y2	Subdivides the region into a Quadtree
-insertPoint x y	Inserts a point into the Quadtree
-searchPoint x y	Searches the region containing the point
-deletePoint x y	Deletes the point (if in a leaf node)
-pathtoroot x y	Prints path from the leaf node to root
-makechannelgraph	Builds the partition graph before subdivision
-netIntersect x1 y1 x2 y2	Returns all partitions intersected by a line
-rectQuery x1 y1 x2 y2	Queries all partitions within a rectangle
+subdivide x1 y1 x2 y2	Subdivides the region into a Quadtree---
+insertPoint x y	Inserts a point into the Quadtree---
+searchPoint x y	Searches the region containing the point---
+deletePoint x y	Deletes the point (if in a leaf node)---
+pathtoroot x y	Prints path from the leaf node to root---
+makechannelgraph	Builds the partition graph before subdivision---
+netIntersect x1 y1 x2 y2	Returns all partitions intersected by a line---
+rectQuery x1 y1 x2 y2	Queries all partitions within a rectangle---
 
-##Tech Stack
+##Tech Stack---
 
-1.C++17
-2.Boost Graph Library
-3.Command-Line Interface
-4.Optional: VS Code for development.
+1.C++17---
+2.Boost Graph Library---
+3.Command-Line Interface---
+4.Optional: VS Code for development.---
 
 BETTER UNDERSTANDING:
 ![image](https://github.com/user-attachments/assets/a5fcd8b3-dc1c-4e25-ac3a-753bc96c267c)
