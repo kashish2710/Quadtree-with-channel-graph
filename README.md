@@ -38,11 +38,11 @@ netIntersect x1 y1 x2 y2	Returns all partitions intersected by a line
 rectQuery x1 y1 x2 y2	Queries all partitions within a rectangle
 
 ##Tech Stack
-C++17
 
-1.Boost Graph Library
-2.Command-Line Interface
-3.Optional: VS Code for development.
+1.C++17
+2.Boost Graph Library
+3.Command-Line Interface
+4.Optional: VS Code for development.
 
 BETTER UNDERSTANDING:
 ![image](https://github.com/user-attachments/assets/a5fcd8b3-dc1c-4e25-ac3a-753bc96c267c)
