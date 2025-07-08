@@ -176,7 +176,7 @@ vector<QuadtreeNode*>& QuadtreeNode::GetLeafNodes() {
 
 //rectQuery-API
 vector<string> QuadtreeNode::RectQuery( int topLeftX, int topLeftY, int bottomRightX, int bottomRightY, const ChannelGraph& graph) {
-    unordered_set<string> unique;
+    unordered_set<string> partitionsInRectangle;
     if (!this) return {};
 
     int rectangle_top_left_X = min(topLeftX,bottomRightX);
@@ -193,20 +193,20 @@ vector<string> QuadtreeNode::RectQuery( int topLeftX, int topLeftY, int bottomRi
             const auto& partition = graph[pid];
             bool overlap_x = max(rectangle_top_left_X , partition .x1) < min(rectangle_bottom_right_X, partition .x2);
             bool overlap_y = max(rectangle_top_left_Y, partition .y1) < min( rectangle_bottom_right_Y, partition .y2);
-            if (overlap_x && overlap_y) unique.insert(partition .name);
+            if (overlap_x && overlap_y) partitionsInRectangle.insert(partition .name);
         }
     } else {
         for (auto* ch : this->children) {
          auto sub= ch-> RectQuery(topLeftX, topLeftY, bottomRightX,bottomRightY, graph);
-            unique.insert(sub.begin(), sub.end());
+             partitionsInRectangle.insert(sub.begin(), sub.end());
         }
     }
 
-    return vector<string>(unique.begin(), unique.end());
+    return vector<string>( partitionsInRectangle.begin(),  partitionsInRectangle.end());
 }
                 //netIntersect-API
 vector<string> QuadtreeNode::NetIntersect(int x_start, int y_start, int x_end, int y_end, const ChannelGraph& graph) {
-    unordered_set<string> result;
+    unordered_set<string>  partitionsOnLine;
 
   
     if ((max(x_start, x_end) < this->region.x) || (min(x_start, x_end) > this->region.x + this->region.width) ||
@@ -225,17 +225,17 @@ vector<string> QuadtreeNode::NetIntersect(int x_start, int y_start, int x_end, i
                                max(y_start, y_end) < p.y1 || min(y_start, y_end) > p.y2);
 
             if (startInside || endInside || boxOverlap) {
-                result.insert(p.name);
+                partitionsOnLine.insert(p.name);
             }
         }
     } else {
         for (auto* ch : this->children) {
             vector<string> sub = ch->NetIntersect(x_start, y_start, x_end, y_end, graph);
-            result.insert(sub.begin(), sub.end());
+           partitionsOnLine.insert(sub.begin(), sub.end());
         }
     }
 
-    return vector<string>(result.begin(), result.end());
+    return vector<string>(partitionsOnLine.begin(), partitionsOnLine.end());
 }
 
 
