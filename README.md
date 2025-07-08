@@ -2,7 +2,7 @@ Quadtree Visualization with Channel Graph Integration
 This project implements a Quadtree-based spatial partitioning system in C++ with Boost Graph integration to represent channel partitions. It provides command-line functionality for spatial queries like point insertion, deletion, region search, and net/line intersection with partitioned areas.
 
  Project Structure
-
+```text
 quadtree-visualization-cpp/
            │
            ├── main.cpp               # CLI interface for interacting with Quadtree
