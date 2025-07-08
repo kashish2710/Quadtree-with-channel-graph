@@ -4,13 +4,13 @@ This project implements a Quadtree-based spatial partitioning system in C++ with
  Project Structure
 
 quadtree-visualization-cpp/
-│
-├── main.cpp               # CLI interface for interacting with Quadtree
-├── Quadtree.h             # Structures and class declarations
-├── Quadtree.cpp           # Quadtree logic and query implementations
-├── ChannelGraph.h/.cpp    # Boost-based graph for partitions
-├── main.exe               # Compiled executable (optional)
-└── .vscode/               # VS Code config (optional)
+           │
+           ├── main.cpp               # CLI interface for interacting with Quadtree
+           ├── Quadtree.h             # Structures and class declarations
+           ├── Quadtree.cpp           # Quadtree logic and query implementations
+           ├── ChannelGraph.h/.cpp    # Boost-based graph for partitions
+           ├── main.exe               # Compiled executable (optional)
+           └── .vscode/               # VS Code config (optional)
 # How It Works
  Quadtree
 A 2D spatial data structure that recursively subdivides the area into four quadrants.
