@@ -44,7 +44,7 @@ NetIntersect x1 y1 x2 y2	Returns all partitions intersected by a line           
  
 RectQuery x1 y1 x2 y2	Queries all partitions within a rectangle                  ```RectQuery 300 650 400 950```
 
-##Tech Stack
+## Tech Stack
 
 1.C++17
 
