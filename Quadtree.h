@@ -23,26 +23,30 @@ private:
     vector<int> graphPartitionIDs;
     QuadtreeNode* parent;
     int id;
-
+    void GenerateDot(std::ostream& out) const;
     static int currentID;
-    static vector<QuadtreeNode*> leafNodes;
+
+ 
 
 public:
     QuadtreeNode(Vertex r);
     ~QuadtreeNode();
-
-void Subdivide(int minW, int minH, int scale, const ChannelGraph& graph);
+ string GetDotRepresentation() const;
+void Subdivide(int minW, int minH, int scale);
 void InsertPoint( int x, int y);
-void SearchPoint( int x, int y,vector<int>& path, const ChannelGraph& graph);
+void SearchPoint( int x, int y,vector<int>& path);
 void QuadtreeNode::DeletePoint(int x, int y);
-void PathToRoot( int x, int y,vector<int>& path, const ChannelGraph& graph);
-vector<string> RectQuery( int x1, int y1, int x2, int y2, const ChannelGraph& graph);
-vector<string> NetIntersect( int x1, int y1, int x2, int y2, const ChannelGraph& graph);
+void PathToRoot( int x, int y,vector<int>& path);
+vector<string> RectQuery( int x1, int y1, int x2, int y2);
+vector<string> NetIntersect( int x1, int y1, int x2, int y2);
 
     static vector<QuadtreeNode*>& GetLeafNodes();
-
+    static vector<QuadtreeNode*> leafNodes;
     static bool InBoundary(QuadtreeNode* node, int x, int y);
-
+static ChannelGraph* graphPtr;
+ const Vertex& getRegion() const {
+        return region;
+    }
    
 };
 

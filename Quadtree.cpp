@@ -1,8 +1,35 @@
 #include "Quadtree.h"
-//initialization
+#include <sstream>
+//PrintDot
+std::string QuadtreeNode::GetDotRepresentation() const {
+    std::ostringstream out;
+    out << "digraph Quadtree {\n"
+        << "  node [shape=box];\n";
+
+    GenerateDot(out);
+
+    out << "}\n";
+    return out.str();
+}
+
+// recursive helper
+void QuadtreeNode::GenerateDot(std::ostream& out) const {
+ 
+    out << "  " << id
+        << " [label=\"ID: " << id
+        << "\\n(" << region.x << ',' << region.y
+        << ")-(" << region.x + region.width << ',' << region.y + region.height<< ")\"];\n";
+
+    // recurse on children
+    for (auto* child : children) {
+        child->GenerateDot(out);                         // node + subtree
+        out << "  " << id << " -> " << child->id << ";\n";  // edge
+    }
+}
+// initialization
 int QuadtreeNode::currentID = 1;
 vector<QuadtreeNode*> QuadtreeNode::leafNodes;
-
+ChannelGraph* QuadtreeNode::graphPtr = nullptr;
 //constructor
 QuadtreeNode::QuadtreeNode(Vertex r) : region(r), parent(nullptr), id(currentID++) {}
 //destructor
@@ -15,7 +42,9 @@ bool QuadtreeNode::InBoundary(QuadtreeNode* n, int x, int y) {
             y >= n->region.y && y < n->region.y + n->region.height);
 }
 //subdivide-API
-void QuadtreeNode::Subdivide(int minW, int minH, int scale, const ChannelGraph& graph) {
+void QuadtreeNode::Subdivide(int minW, int minH, int scale) {
+    auto& graph = *graphPtr; 
+
     int w = region.width, h = region.height;
     if (w <= minW && h <= minH) {
         for (auto vertexID : boost::make_iterator_range(vertices(graph))) {
@@ -54,7 +83,7 @@ for (int i = 0; i < scale; ++i) {
 }
 
 for (auto* child : children) {
-    child->Subdivide(minW, minH, scale, graph);  // Recursive call on each child
+    child->Subdivide(minW, minH, scale);  // Recursive call on each child
 }
 
 }
@@ -88,45 +117,48 @@ void QuadtreeNode::InsertPoint(int x, int y) {
         cout << "Point (" << x << "," << y << ") is outside all current leaf nodes. Cannot insert.\n";
     }
 }
-//searchPoint-API
-void QuadtreeNode::SearchPoint(int x, int y, std::vector<int>& path, const ChannelGraph& graph) {
+//SearchPoint
+void QuadtreeNode::SearchPoint(int x, int y, std::vector<int>& path) {
     if (!InBoundary(this, x, y)) {
         cout << "Point (" << x << "," << y << ") is outside this boundary.\n";
         return;
     }
 
-    path.push_back(this->id); 
-
+    path.push_back(this->id);
+    
     if (this->children.empty()) {
-      
         cout << "Node ID " << this->id << " region (" << this->region.x << "," << this->region.y
-                  << ") " << this->region.width << "x" << this->region.height << "\nPartitions: ";
+             << ") " << this->region.width << "x" << this->region.height << "\nPartitions: ";
         for (int pid : this->graphPartitionIDs)
-           cout << pid +1 << " ";
-
-     
-        std::cout << "\nPath: ";
+            cout << pid + 1 << " ";
+        cout << "\nPath: ";
         for (size_t i = 0; i < path.size(); ++i) {
             cout << path[i];
-            if (i != path.size() - 1) cout << "-> ";
+            if (i != path.size() - 1) cout << " -> ";
         }
         cout << "\n";
         return;
     }
-
-    bool found = false;
     for (auto* ch : this->children) {
         if (ch && InBoundary(ch, x, y)) {
-            ch->SearchPoint(x, y, path,graph);  // Recurse
-            found = true;
-            break;
+            ch->SearchPoint(x, y, path);  // Recurse into child
+            return;
         }
     }
+ 
+    cout << "No child node currently covers (" << x << "," << y
+         << "). Showing closest parent region only.\n";
+    cout << "Node ID " << this->id << " region (" << this->region.x << "," << this->region.y
+         << ") " << this->region.width << "x" << this->region.height << "\n";
 
-    if (!found) {
-        cout << "Point (" << x << "," << y << ") is outside all current leaf nodes.\n";
+    cout << "Path: ";
+    for (size_t i = 0; i < path.size(); ++i) {
+        cout << path[i];
+        if (i != path.size() - 1) cout << " -> ";
     }
+    cout << "\n";
 }
+
 
 //deletepoint-API
 void QuadtreeNode::DeletePoint(int x, int y) {
@@ -166,8 +198,8 @@ void QuadtreeNode::DeletePoint(int x, int y) {
 }
 
 //pathtoroot-API
-void QuadtreeNode::PathToRoot( int x, int  y,vector<int>& path, const ChannelGraph& graph ) {
-    SearchPoint( x, y,path,graph);
+void QuadtreeNode::PathToRoot( int x, int  y,vector<int>& path) {
+    SearchPoint( x, y,path);
 }
 
 vector<QuadtreeNode*>& QuadtreeNode::GetLeafNodes() {
@@ -175,7 +207,8 @@ vector<QuadtreeNode*>& QuadtreeNode::GetLeafNodes() {
 }
 
 //rectQuery-API
-vector<string> QuadtreeNode::RectQuery( int topLeftX, int topLeftY, int bottomRightX, int bottomRightY, const ChannelGraph& graph) {
+vector<string> QuadtreeNode::RectQuery( int topLeftX, int topLeftY, int bottomRightX, int bottomRightY) {
+     auto& graph = *graphPtr;
     unordered_set<string> partitionsInRectangle;
     if (!this) return {};
 
@@ -197,7 +230,7 @@ vector<string> QuadtreeNode::RectQuery( int topLeftX, int topLeftY, int bottomRi
         }
     } else {
         for (auto* ch : this->children) {
-         auto sub= ch-> RectQuery(topLeftX, topLeftY, bottomRightX,bottomRightY, graph);
+         auto sub= ch-> RectQuery(topLeftX, topLeftY, bottomRightX,bottomRightY);
              partitionsInRectangle.insert(sub.begin(), sub.end());
         }
     }
@@ -205,9 +238,9 @@ vector<string> QuadtreeNode::RectQuery( int topLeftX, int topLeftY, int bottomRi
     return vector<string>( partitionsInRectangle.begin(),  partitionsInRectangle.end());
 }
                 //netIntersect-API
-vector<string> QuadtreeNode::NetIntersect(int x_start, int y_start, int x_end, int y_end, const ChannelGraph& graph) {
+vector<string> QuadtreeNode::NetIntersect(int x_start, int y_start, int x_end, int y_end) {
     unordered_set<string>  partitionsOnLine;
-
+ auto& graph = *graphPtr;
   
     if ((max(x_start, x_end) < this->region.x) || (min(x_start, x_end) > this->region.x + this->region.width) ||
         (max(y_start, y_end) < this->region.y) || (min(y_start, y_end) > this->region.y + this->region.height)) {
@@ -230,7 +263,7 @@ vector<string> QuadtreeNode::NetIntersect(int x_start, int y_start, int x_end, i
         }
     } else {
         for (auto* ch : this->children) {
-            vector<string> sub = ch->NetIntersect(x_start, y_start, x_end, y_end, graph);
+            vector<string> sub = ch->NetIntersect(x_start, y_start, x_end, y_end);
            partitionsOnLine.insert(sub.begin(), sub.end());
         }
     }
