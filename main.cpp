@@ -38,9 +38,6 @@ void CheckCurrentTreeCorrectness(const QuadtreeNode* root) {
 int main() {
     QuadtreeNode* tree = nullptr;
     ChannelGraph graph;
- QuadtreeNode::graphPtr = &graph;
-
-
     vector<Partition> partitions = {
         {"P1", 0, 0, 10, 100},
         {"P2", 10, 0, 20, 20},
@@ -66,8 +63,9 @@ int main() {
             int w, h, minW, minH, scale;
             cin >> w >> h >> minW >> minH >> scale;
             if (!graph.m_vertices.empty()) {
-                Vertex root(0, 0, w, h, 0);
-              tree = new QuadtreeNode(root);
+               Vertex root(0, 0, w, h, 0);
+           tree = new QuadtreeNode(root, &graph); 
+
               QuadtreeNode::GetLeafNodes().clear();
               auto start = chrono::high_resolution_clock::now();
               tree->Subdivide(minW, minH, scale);//tree object should not be passed in function

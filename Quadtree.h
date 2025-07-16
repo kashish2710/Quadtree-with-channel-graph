@@ -25,11 +25,11 @@ private:
     int id;
     void GenerateDot(std::ostream& out) const;
     static int currentID;
-
+ ChannelGraph* graphPtr;
  
 
 public:
-    QuadtreeNode(Vertex r);
+    QuadtreeNode(const Vertex& r, ChannelGraph* g);
     ~QuadtreeNode();
  string GetDotRepresentation() const;
 void Subdivide(int minW, int minH, int scale);
@@ -43,7 +43,7 @@ vector<string> NetIntersect( int x1, int y1, int x2, int y2);
     static vector<QuadtreeNode*>& GetLeafNodes();
     static vector<QuadtreeNode*> leafNodes;
     static bool InBoundary(QuadtreeNode* node, int x, int y);
-static ChannelGraph* graphPtr;
+
  const Vertex& getRegion() const {
         return region;
     }

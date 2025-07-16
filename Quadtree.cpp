@@ -29,9 +29,11 @@ void QuadtreeNode::GenerateDot(std::ostream& out) const {
 // initialization
 int QuadtreeNode::currentID = 1;
 vector<QuadtreeNode*> QuadtreeNode::leafNodes;
-ChannelGraph* QuadtreeNode::graphPtr = nullptr;
+
 //constructor
-QuadtreeNode::QuadtreeNode(Vertex r) : region(r), parent(nullptr), id(currentID++) {}
+QuadtreeNode::QuadtreeNode(const Vertex& r, ChannelGraph* g)
+    : region(r), graphPtr(g), parent(nullptr), id(currentID++) {}
+
 //destructor
 QuadtreeNode::~QuadtreeNode() {
     for (auto* ch : children) delete ch;
@@ -43,9 +45,11 @@ bool QuadtreeNode::InBoundary(QuadtreeNode* n, int x, int y) {
 }
 //subdivide-API
 void QuadtreeNode::Subdivide(int minW, int minH, int scale) {
-    auto& graph = *graphPtr; 
+    auto& graph = *graphPtr;
 
     int w = region.width, h = region.height;
+
+    // Base case: leaf node
     if (w <= minW && h <= minH) {
         for (auto vertexID : boost::make_iterator_range(vertices(graph))) {
             const Partition& partition = graph[vertexID];
@@ -59,34 +63,37 @@ void QuadtreeNode::Subdivide(int minW, int minH, int scale) {
         return;
     }
 
-   int subWidth = (region.width + scale - 1) / scale;
-int subHeight = (region.height + scale - 1) / scale;
+    // Dimensions of child nodes
+    int subWidth = (w + scale - 1) / scale;
+    int subHeight = (h + scale - 1) / scale;
 
-int parentX = region.x;
-int parentY = region.y;
-int nextLevel = region.level + 1;
+    int parentX = region.x;
+    int parentY = region.y;
+    int nextLevel = region.level + 1;
 
-for (int i = 0; i < scale; ++i) {
-    for (int j = 0; j < scale; ++j) {
-        int childX = parentX + i * subWidth;
-        int childY = parentY + j * subHeight;
+    // Create children
+    for (int i = 0; i < scale; ++i) {
+        for (int j = 0; j < scale; ++j) {
+            int childX = parentX + i * subWidth;
+            int childY = parentY + j * subHeight;
 
-        int actualWidth = std::min(subWidth, parentX + region.width - childX);
-        int actualHeight = std::min(subHeight, parentY + region.height - childY);
+            int actualWidth = std::min(subWidth, parentX + w - childX);
+            int actualHeight = std::min(subHeight, parentY + h - childY);
 
-        if (actualWidth > 0 && actualHeight > 0) {
-            auto* childNode = new QuadtreeNode(Vertex(childX, childY, actualWidth, actualHeight, nextLevel));
-            childNode->parent = this;
-            children.push_back(childNode);
+            if (actualWidth > 0 && actualHeight > 0) {
+                auto* childNode = new QuadtreeNode(Vertex(childX, childY, actualWidth, actualHeight, nextLevel), graphPtr);
+                childNode->parent = this;
+                children.push_back(childNode);
+            }
         }
+    }
+
+    // Recurse on children
+    for (auto* child : children) {
+        child->Subdivide(minW, minH, scale);
     }
 }
 
-for (auto* child : children) {
-    child->Subdivide(minW, minH, scale);  // Recursive call on each child
-}
-
-}
 //insertPoint-API
 void QuadtreeNode::InsertPoint(int x, int y) {
     if (!InBoundary(this, x, y)) {
