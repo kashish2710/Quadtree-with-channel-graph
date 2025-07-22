@@ -6,7 +6,8 @@
 
 using namespace std;
 void CheckCurrentTreeCorrectness(const QuadtreeNode* root) {
-    int actualLeafCount = QuadtreeNode::leafNodes.size();
+ int actualLeafCount = root->GetLeafNodes().size();
+
     int expectedLeafCount = -1;
 
     int w = root->getRegion().width;
@@ -65,8 +66,8 @@ int main() {
             if (!graph.m_vertices.empty()) {
                Vertex root(0, 0, w, h, 0);
            tree = new QuadtreeNode(root, &graph); 
+              tree->GetLeafNodes().clear();
 
-              QuadtreeNode::GetLeafNodes().clear();
               auto start = chrono::high_resolution_clock::now();
               tree->Subdivide(minW, minH, scale);//tree object should not be passed in function
               auto end = chrono::high_resolution_clock::now();

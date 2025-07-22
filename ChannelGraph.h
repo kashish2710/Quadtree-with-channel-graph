@@ -7,15 +7,22 @@
 
 using namespace std;
 
+// Structure to represent a Partition (channel block) with coordinates
 struct Partition {
-    string name;
-    int x1, y1, x2, y2;
+    string name; // Unique name/ID of the partition
+    int x1, y1;  // Top-left corner
+    int x2, y2;  // Bottom-right corner
 };
 
+// Define the ChannelGraph type using Boost adjacency_list.
+// Each node in the graph is a Partition, and edges are undirected.
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, Partition> ChannelGraph;
 
+//  To check if two partitions touch horizontally (i.e., side-by-side and overlapping in Y)
 bool isHorizontallyTouching(const Partition& a, const Partition& b);
 
+// Function to construct the channel graph by connecting horizontally touching partitions.
+// Takes a reference to the graph and a list of partitions to process.
 void makeChannelGraph(ChannelGraph& graph, const vector<Partition>& partitions);
 
 #endif
