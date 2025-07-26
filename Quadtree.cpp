@@ -1,5 +1,6 @@
 #include "Quadtree.h"
 #include <sstream>
+
 // ======================= DOT Visualization ==========================
 
 // Generates DOT format string to visualize the quadtree structure
@@ -117,7 +118,6 @@ void QuadtreeNode::Subdivide(int minW, int minH, int scale) {
 }
 
 // ================ Insert Point ==============================
-
 // Inserts a point into the quadtree, placing it in the correct leaf
 void QuadtreeNode::InsertPoint(int x, int y) {
     if (!this->InBoundary(x, y)) {
@@ -130,52 +130,61 @@ void QuadtreeNode::InsertPoint(int x, int y) {
         cout << "Inserted at node " << id << "\n";
         return;
     }
-
     for (auto* ch : children) {
         if (ch && ch->InBoundary(x, y)) {
             ch->InsertPoint(x, y);
             return;
         }
     }
-
     cout << "Point (" << x << "," << y << ") is outside all current leaf nodes. Cannot insert.\n";
 }
 
 // ================ Search Point ==============================
-
 // Finds the node containing a point and prints the path followed
 void QuadtreeNode::SearchPoint(int x, int y, std::vector<int>& path) {
     if (!this->InBoundary(x, y)) {
         cout << "Point (" << x << "," << y << ") is outside this boundary.\n";
         return;
     }
-
     path.push_back(this->id);
-
+    // If this is a leaf node
     if (this->children.empty()) {
         cout << "Node ID " << id << " region (" << region.x << "," << region.y << ") "
              << region.width << "x" << region.height << "\nPartitions: ";
-        for (int pid : graphPartitionIDs)
-            cout << pid + 1 << " ";
+        bool foundPartition = false;
+        for (int pid : graphPartitionIDs) {
+            const Partition& p = (*graphPtr)[pid];
+            if (x >= p.x1 && x <= p.x2 && y >= p.y1 && y <= p.y2) {
+                cout << p.name << " ";
+                foundPartition = true;
+            }
+        }
+        if (!foundPartition) cout << "None";
+
         cout << "\nPath: ";
         for (size_t i = 0; i < path.size(); ++i)
             cout << path[i] << (i != path.size() - 1 ? " -> " : "");
         cout << "\n";
         return;
     }
-
+    // If not a leaf, search children
     for (auto* ch : children) {
         if (ch && ch->InBoundary(x, y)) {
             ch->SearchPoint(x, y, path);
             return;
         }
     }
+    // Fallback: No child covers the point, so print this parent node as the last valid region
+    cout << "No leaf node contains (" << x << "," << y << "). Nearest region:\n";
+    cout << "Node ID " << id << " region (" << region.x << "," << region.y << ") "
+         << region.width << "x" << region.height << "\n";
 
-    cout << "No child node currently covers (" << x << "," << y << ").\n";
+    cout << "Path: ";
+    for (size_t i = 0; i < path.size(); ++i)
+        cout << path[i] << (i != path.size() - 1 ? " -> " : "");
+    cout << "\n";
 }
-
 // =================== Delete Point ============================
-
 // Removes a point and deletes the corresponding leaf node
 void QuadtreeNode::DeletePoint(int x, int y) {
     if (!this->InBoundary(x, y)) {
@@ -196,7 +205,6 @@ void QuadtreeNode::DeletePoint(int x, int y) {
         delete this;
         return;
     }
-
     for (auto*& ch : children) {
         if (ch && ch->InBoundary(x, y)) {
             ch->DeletePoint(x, y);
@@ -206,16 +214,12 @@ void QuadtreeNode::DeletePoint(int x, int y) {
 
     cout << "No leaf node contains point (" << x << "," << y << "). Cannot delete.\n";
 }
-
 // ================ Path To Root ==============================
-
 // Records path from a given point to the root using SearchPoint
 void QuadtreeNode::PathToRoot(int x, int y, vector<int>& path) {
     SearchPoint(x, y, path);
 }
-
-// ================ Rectangle Query ===========================
-
+// ================ Rectangle Query ==========================
 // Returns names of partitions intersecting a given rectangle
 vector<string> QuadtreeNode::RectQuery( int topLeftX, int topLeftY, int bottomRightX, int bottomRightY) {
      auto& graph = *graphPtr;
@@ -252,13 +256,11 @@ vector<string> QuadtreeNode::RectQuery( int topLeftX, int topLeftY, int bottomRi
     return vector<string>( partitionsInRectangle.begin(),  partitionsInRectangle.end());
 }
                // ================ Line (Net) Intersection ===================
-
 // Returns partitions that intersect the line between two points
 vector<string> QuadtreeNode::NetIntersect(int x_start, int y_start, int x_end, int y_end) {
     unordered_set<string>  partitionsOnLine;
  auto& graph = *graphPtr;
       // Bounding box check to skip unnecessary nodes
-
     if ((max(x_start, x_end) < this->region.x) || (min(x_start, x_end) > this->region.x + this->region.width) ||
         (max(y_start, y_end) < this->region.y) || (min(y_start, y_end) > this->region.y + this->region.height)) {
         return {};
@@ -285,8 +287,7 @@ vector<string> QuadtreeNode::NetIntersect(int x_start, int y_start, int x_end, i
            partitionsOnLine.insert(sub.begin(), sub.end());
         }
     }
+    return vector<string>(partitionsOnLine.begin(), partitionsOnLine.end());}
 
-    return vector<string>(partitionsOnLine.begin(), partitionsOnLine.end());
-}
 
 

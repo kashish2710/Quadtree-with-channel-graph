@@ -22,7 +22,6 @@ typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, Part
 bool isHorizontallyTouching(const Partition& a, const Partition& b);
 
 // Function to construct the channel graph by connecting horizontally touching partitions.
-// Takes a reference to the graph and a list of partitions to process.
 void makeChannelGraph(ChannelGraph& graph, const vector<Partition>& partitions);
 
 #endif

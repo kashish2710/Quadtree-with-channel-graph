@@ -9,11 +9,7 @@ bool isHorizontallyTouching(const Partition& a, const Partition& b) {
     return (a.x2 == b.x1 || a.x1 == b.x2) && verticalOverlap; // checks if horizontally adjacent
 }
 
-// Function to construct the channel graph from a list of partitions
-// Steps:
-// 1. Add each partition as a vertex in the Boost graph.
-// 2. Check every pair of partitions.
-// 3. If they are horizontally touching, add an edge between them.
+// Function to construct the channel graph
 void makeChannelGraph(ChannelGraph& graph, const vector<Partition>& partitions) {
     graph.clear(); // Clear any existing graph structure
 

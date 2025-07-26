@@ -5,8 +5,20 @@
 
 
 using namespace std;
+//test cases
+int CountLeafNodes(const QuadtreeNode* node) {
+    if (!node) return 0;
+    if (node->GetChildren().empty()) return 1;
+
+    int total = 0;
+    for (auto* ch : node->GetChildren()) {
+        total += CountLeafNodes(ch);
+    }
+    return total;
+}
+
 void CheckCurrentTreeCorrectness(const QuadtreeNode* root) {
- int actualLeafCount = root->GetLeafNodes().size();
+    int actualLeafCount = CountLeafNodes(root);  
 
     int expectedLeafCount = -1;
 
@@ -33,50 +45,65 @@ void CheckCurrentTreeCorrectness(const QuadtreeNode* root) {
              << w << "x" << h << "\n";
     }
 }
-
-
-
 int main() {
     QuadtreeNode* tree = nullptr;
     ChannelGraph graph;
     vector<Partition> partitions = {
         {"P1", 0, 0, 10, 100},
         {"P2", 10, 0, 20, 20},
-        {"P3", 10, 20, 20, 60},
+        // {"P3", 10, 20, 20, 60}, 
         {"P4", 20, 0, 50, 100},
         {"P5", 10, 60, 20, 100},
-        {"P6", 50, 0, 75, 50},
+        // {"P6", 50, 0, 75, 50},
         {"P7", 50, 50, 75, 100},
         {"P8", 75, 0, 100, 100}
     };
-
+   vector<pair<Point, Point>> path = {
+    {{0,0}, {40,40}},   // horizontal
+    {{40,40}, {40,60}},   // vertical
+    {{40,60}, {55,60}},   // horizontal
+    {{55,60}, {55,70}},   // vertical
+    {{55,70}, {100,100}}    // horizontal 
+       
+    };  
     while (true) {
-        cout << "\nCommand: MakeChannelGraph |Subdivide w h minW minH scale | InsertPoint x y | SearchPoint x y | DeletePoint x y | PathToRoot x y | RectQuery x1 y1 x2 y2 | NetIntersect x1 y1 x2 y2 | PrintDot | VerifyTree | Exit\n> ";
+        cout << "\nCommand: MakeChannelGraph |Subdivide w h minW minH scale | InsertPoint x y | SearchPoint x y | DeletePoint x y | PathToRoot x y | RectQuery x1 y1 x2 y2 | NetIntersect x1 y1 x2 y2 | PrintDot | VerifyTree | PathRectQuery | Exit\n> ";
         string cmd;
         cin >> cmd;
 
         if (cmd == "Exit") break;
-        else if (cmd == "MakeChannelGraph") {
-            makeChannelGraph(graph, partitions);
-            cout << "Channel graph created.\n";
-        }
-        else if (cmd == "Subdivide") {
-            int w, h, minW, minH, scale;
-            cin >> w >> h >> minW >> minH >> scale;
-            if (!graph.m_vertices.empty()) {
-               Vertex root(0, 0, w, h, 0);
-           tree = new QuadtreeNode(root, &graph); 
-              tree->GetLeafNodes().clear();
 
-              auto start = chrono::high_resolution_clock::now();
-              tree->Subdivide(minW, minH, scale);//tree object should not be passed in function
-              auto end = chrono::high_resolution_clock::now();
-              chrono::duration<double> elapsed = end - start;
-              cout << "Quadtree created in " << elapsed.count() << " seconds.\n";
-            } else {
-                cout << "Please run makechannelgraph first.\n";
-            }
-        }
+        else if (cmd == "MakeChannelGraph") {
+    graph = ChannelGraph();  // create a fresh, empty graph
+    makeChannelGraph(graph, partitions);
+    cout << "Channel graph created.\n";
+}
+
+else if (cmd == "Subdivide") {
+    if (tree) {
+        delete tree;    // delete old tree
+        tree = nullptr;
+    }
+
+    int w, h, minW, minH, scale;
+    cin >> w >> h >> minW >> minH >> scale;
+
+    if (!boost::num_vertices(graph)) {  // check if graph is empty
+        cout << "Please run makechannelgraph first.\n";
+        return 0;
+    }
+
+    Vertex root(0, 0, w, h, 0);
+    tree = new QuadtreeNode(root, &graph);
+    tree->GetLeafNodes().clear();
+
+    auto start = chrono::high_resolution_clock::now();
+    tree->Subdivide(minW, minH, scale);
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> elapsed = end - start;
+    cout << "Quadtree created in " << elapsed.count() << " seconds.\n";
+}
+
         else if (cmd == "InsertPoint") {
             int point_x, point_y; cin >> point_x >> point_y;
               auto start = chrono::high_resolution_clock::now();
@@ -139,11 +166,31 @@ else if (cmd == "VerifyTree") {
     else
         cout << "Tree not built yet.\n";
 }
+else if (cmd == "PathRectQuery") {
+    if (path.empty()) {
+        cout << "Path vector is empty.\n";
+    } else {
+        
+        Point start = path.front().first;   
+        Point end   = path.back().second;   
+        
+        // Bounding rectangle coordinates
+        int minX = min(start.x, end.x);
+        int minY = min(start.y, end.y);
+        int maxX = max(start.x, end.x);
+        int maxY = max(start.y, end.y);
 
+        auto res = tree->RectQuery(minX, minY, maxX, maxY);
+
+        cout << "Partitions in bounding rectangle (" 
+             << minX << "," << minY << ") - (" << maxX << "," << maxY << "): ";
+        for (const auto& r : res) cout << r << " ";
+        cout << "\n";
+    }
+}
 else{
     cout<<"Invalid Command!";
 }
     }
-
-    return 0;
+       return 0;
 }

@@ -13,7 +13,10 @@ struct Vertex {
     int x, y, width, height, level;
     Vertex(int x, int y, int w, int h, int l) : x(x), y(y), width(w), height(h), level(l) {}
 };
-
+//points on line
+struct Point{
+    int x ,y;
+};
 class QuadtreeNode {
 private:
      Vertex region; // Current region this node represents
@@ -26,6 +29,7 @@ private:
     ChannelGraph* graphPtr; // Pointer to the associated channel graph
     vector<QuadtreeNode*> leafNodes; // Stores all leaf nodes for querying etc.
     void GenerateDot(std::ostream& out) const; // Used for visualization (Graphviz DOT format)
+
 
 public:
    // Constructor: Initializes the node with its region and associated ChannelGraph
@@ -71,7 +75,8 @@ public:
     const Vertex& getRegion() const {
         return region;
     }
-   
+ const vector<QuadtreeNode*>& GetChildren() const { return children; }
+
 };
 
 #endif
